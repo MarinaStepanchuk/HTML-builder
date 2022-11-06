@@ -11,7 +11,7 @@ fs.mkdir(path.join(__dirname, 'project-dist'), { recursive: true }, err => {
     if(err) throw err;
 });
 
-fs.writeFile(styleFile, "", err => {
+fs.writeFile(styleFile, '', err => {
     if (err) {
         throw err;
     };

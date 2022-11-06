@@ -14,7 +14,6 @@ stdin.on('data', data => {
     if (data.toString().trim() === 'exit') {
         exitFromProcess();
     };
-    let text = '';
     fs.appendFile(file, data.toString(), err => {
         if(err) throw err;
     });

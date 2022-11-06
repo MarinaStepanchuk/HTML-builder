@@ -4,7 +4,7 @@ const path = require('path');
 const bundleFile = path.join(__dirname, 'project-dist', 'bundle.css');
 const folderStyles = path.join(__dirname, 'styles');
 
-fs.writeFile(bundleFile, "", err => {
+fs.writeFile(bundleFile, '', err => {
     if (err) {
         throw err;
     };
