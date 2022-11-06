@@ -5,7 +5,7 @@ const path = require('path');
 const file = path.join(__dirname, 'text.txt');
 
 fs.writeFile(file, '', err => {
-    if(err) throw err
+    if(err) throw err;
 });
 
 stdout.write('Добрый день. Введите текст для записи в файл:\n');
@@ -13,10 +13,10 @@ stdout.write('Добрый день. Введите текст для запис
 stdin.on('data', data => {
     if (data.toString().trim() === 'exit') {
         exitFromProcess();
-    }
+    };
     let text = '';
     fs.appendFile(file, data.toString(), err => {
-        if(err) throw err
+        if(err) throw err;
     });
 });
 

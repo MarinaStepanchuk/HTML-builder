@@ -1,4 +1,3 @@
-
 const fs = require('fs');
 const path = require('path');
 
@@ -18,14 +17,14 @@ fs.readdir(folder, (err, files) => {
             if(!files.includes(elem.name)) {
                 fs.unlink(`${folderNew}/${elem.name}`, err => {
                     return
-                })
-            }
-        })
-    })
+                });
+            };
+        });
+    });
 
     files.forEach(file => {
         fs.copyFile(`${folder}/${file}`, `${folderNew}/${file}`, err => {
             if(err) throw err;
-        })
-    })
+        });
+    });
 });
