@@ -1,6 +1,6 @@
 const { stdin, stdout } = process;
-const fs = require("fs");
-const path = require("path");
+const fs = require('fs');
+const path = require('path');
 
 const file = path.join(__dirname, 'text.txt');
 
@@ -11,7 +11,6 @@ fs.writeFile(file, '', err => {
 stdout.write('Добрый день. Введите текст для записи в файл:\n');
 
 stdin.on('data', data => {
-    // console.log(data.toString())
     if (data.toString().trim() === 'exit') {
         exitFromProcess();
     }
