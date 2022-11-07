@@ -16,7 +16,7 @@ fs.readdir(folderStyles, { withFileTypes: true }, (err, files) => {
         if(file.isFile() && path.extname(file.name).slice(1) === 'css') {
             fs.readFile(path.join(folderStyles, file.name), 'utf8', function(error, fileContent){
                 if(error) throw error;
-                fs.appendFile(bundleFile, fileContent, err => {
+                fs.appendFile(bundleFile, fileContent + '\n', err => {
                     if(err) throw err;
                 });
             }); 
