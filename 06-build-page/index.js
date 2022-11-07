@@ -5,13 +5,21 @@ const folderStyles = path.join(__dirname, 'styles');
 const folderProject = path.join(__dirname, 'project-dist');
 const folderAssets = path.join(__dirname, 'assets');
 const folderAssetsProject = path.join(folderProject, 'assets');
+const folderComponents = path.join(__dirname, 'components');
 const styleFile = path.join(__dirname, 'project-dist', 'style.css');
+const htmlFile = path.join(__dirname, 'project-dist', 'index.html');
 
 fs.mkdir(path.join(__dirname, 'project-dist'), { recursive: true }, err => {
     if(err) throw err;
 });
 
 fs.writeFile(styleFile, '', err => {
+    if (err) {
+        throw err;
+    };
+});
+
+fs.writeFile(htmlFile, '', err => {
     if (err) {
         throw err;
     };
@@ -67,3 +75,31 @@ function copyDir(dir, newDir) {
         });
     });
 };
+
+let htmlContent = '';
+const readStrim = fs.createReadStream(path.join(__dirname, 'template.html'), 'utf8');
+
+readStrim.on('data', part => htmlContent += part)
+
+readStrim.on('end', () => {
+        fs.readdir(folderComponents, { withFileTypes: true }, (err, files) => {
+            if(err) throw err;
+            files.forEach(file => {
+                if(file.isFile() && path.extname(file.name) === '.html') {
+                    let name = file.name.split('.')[0];
+                    let component = '';
+
+                    const readStrimComponents = fs.createReadStream(path.join(folderComponents, file.name), 'utf8');
+
+                    readStrimComponents.on('data', part => component += part )
+
+                    readStrimComponents.on('end', () => {
+                        htmlContent = htmlContent.replaceAll(`{{${name}}}`, component)
+                        fs.writeFile(htmlFile, htmlContent, err => {
+                            if(err) throw err;
+                        });
+                    });
+                };
+            });
+        });
+});
