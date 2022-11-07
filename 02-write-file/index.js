@@ -22,6 +22,6 @@ stdin.on('data', data => {
 process.on('SIGINT', exitFromProcess);
 
 function exitFromProcess() {
-    stdout.write(`Ввод завершен. Введеный текст отразится в файле ${file}`);
+    stdout.write(`\nВвод завершен. Введеный текст отразится в файле ${file}`);
     process.exit();
 }

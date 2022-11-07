@@ -1,6 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 
+//обратите внимание, что проверка согласно ТЗ должна проверяться на Node текущей LTS версии. Т.к например при версии от 14 и ниже не будет работать такая функция как replaceAll
+
 const folderStyles = path.join(__dirname, 'styles');
 const folderProject = path.join(__dirname, 'project-dist');
 const folderAssets = path.join(__dirname, 'assets');
