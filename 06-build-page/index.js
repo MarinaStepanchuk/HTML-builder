@@ -1,4 +1,5 @@
 const fs = require('fs');
+const fsPromises = require('fs/promises');
 const path = require('path');
 
 //обратите внимание, что проверка согласно ТЗ должна проверяться на Node текущей LTS версии. Т.к например при версии от 14 и ниже не будет работать такая функция как replaceAll
@@ -11,97 +12,64 @@ const folderComponents = path.join(__dirname, 'components');
 const styleFile = path.join(__dirname, 'project-dist', 'style.css');
 const htmlFile = path.join(__dirname, 'project-dist', 'index.html');
 
-fs.mkdir(path.join(__dirname, 'project-dist'), { recursive: true }, err => {
-    if(err) throw err;
-});
+const toDo = async () => {
+    await createDir();
+    await createStyles();
+    await copyAssets();
+    await createHtml();
+};
 
-fs.writeFile(styleFile, '', err => {
-    if (err) {
-        throw err;
-    };
-});
+toDo();
 
-fs.writeFile(htmlFile, '', err => {
-    if (err) {
-        throw err;
-    };
-});
+async function createDir() {
+    await fsPromises.rm(folderProject, { force: true, recursive: true });
+    await fsPromises.mkdir(folderProject, { recursive: true });
+};
 
-fs.readdir(folderStyles, { withFileTypes: true }, (err, files) => {
-    if(err) throw err;
+async function copyAssets() {
+    await fsPromises.rm(folderAssetsProject, { force: true, recursive: true });
+    await fsPromises.mkdir(folderAssetsProject, { recursive: true });
+    await copyDir(folderAssets, folderAssetsProject);
+};
+
+async function copyDir(folder, folderNew) {
+    const files = await fsPromises.readdir(folder, { withFileTypes: true });
     files.forEach(file => {
-        if(file.isFile() && path.extname(file.name).slice(1) === 'css') {
-            fs.readFile(path.join(folderStyles, file.name), 'utf8', function(error, fileContent){
-                if(error) throw error;
-                fs.appendFile(styleFile, fileContent, err => {
-                    if(err) throw err;
-                });
-            }); 
+        if(file.isFile()) {
+            fsPromises.copyFile(path.join(folder,file.name), path.join(folderNew, file.name));
+        } else {
+            fsPromises.mkdir(path.join(folderNew, file.name), { recursive: true }).then(
+            copyDir(path.join(folder, file.name), path.join(folderNew, file.name)));
         };
-    });
-});
-
-fs.rm(folderAssetsProject, { recursive: true, force: true }, err => {
-    if(err) throw err;
-    fs.mkdir(folderAssetsProject, { recursive: true }, err => {
-        if(err) throw err;
-        fs.readdir(folderAssets, { withFileTypes: true }, (err, files) => {
-            if(err) throw err;
-            files.forEach(file => {
-                if(file.isFile()) {
-                    fs.copyFile(path.join(folderAssets,file.name), path.join(folderAssetsProject, file.name), err => {
-                        if(err) throw err;
-                    });
-                } else {
-                    copyDir(path.join(folderAssets, file.name), path.join(folderAssetsProject, file.name));
-                };
-            });
-        });
-    });
-});
-
-function copyDir(dir, newDir) {
-    fs.mkdir(newDir, { recursive: true }, err => {
-        if(err) throw err;
-        fs.readdir(dir, { withFileTypes: true }, (err, files) => {
-            if(err) throw err;
-            files.forEach(file => {
-                if(file.isFile()) {
-                    fs.copyFile(path.join(dir, file.name), path.join(newDir, file.name), err => {
-                        if(err) throw err;
-                    });
-                } else {
-                    copyDir(path.join(dir, file.name), path.join(newDir, file.name));
-                };
-            });
-        });
     });
 };
 
-let htmlContent = '';
-const readStrim = fs.createReadStream(path.join(__dirname, 'template.html'), 'utf8');
-
-readStrim.on('data', part => htmlContent += part)
-
-readStrim.on('end', () => {
-        fs.readdir(folderComponents, { withFileTypes: true }, (err, files) => {
-            if(err) throw err;
-            files.forEach(file => {
-                if(file.isFile() && path.extname(file.name) === '.html') {
-                    let name = file.name.split('.')[0];
-                    let component = '';
-
-                    const readStrimComponents = fs.createReadStream(path.join(folderComponents, file.name), 'utf8');
-
-                    readStrimComponents.on('data', part => component += part )
-
-                    readStrimComponents.on('end', () => {
-                        htmlContent = htmlContent.replaceAll(`{{${name}}}`, component)
-                        fs.writeFile(htmlFile, htmlContent, err => {
-                            if(err) throw err;
-                        });
-                    });
-                };
+async function createStyles() {
+    await fsPromises.writeFile(styleFile, '');
+    fs.readdir(folderStyles, { withFileTypes: true }, (err, styleFiles) => {
+        if(err) throw err;
+        styleFiles.forEach(file => {
+        if(file.isFile() && path.extname(file.name).slice(1) === 'css') {
+            fsPromises.readFile(path.join(folderStyles, file.name), 'utf8').then( (fileContent)=>{
+                fsPromises.appendFile(styleFile, fileContent + '\n');
             });
-        });
-});
+        };
+    });
+    });
+};
+
+async function createHtml() {
+    await fsPromises.writeFile(htmlFile, '');
+
+    let htmlContent = await fsPromises.readFile(path.join(__dirname, 'template.html'), 'utf-8');
+    const tags = htmlContent.match(/{{[^{}]*}}/g) || [];
+
+    for (let i = 0; i < tags.length; i++) {
+        let tagName = tags[i].replace('{{', '').replace('}}', '') + '.html';
+        let componentPath = path.join(folderComponents, tagName);
+        let content = await fsPromises.readFile(componentPath,'utf-8');
+        htmlContent = htmlContent.replace(tags[i], content);
+    };
+
+    await fsPromises.appendFile(htmlFile, htmlContent, { encoding: 'utf-8' });
+};
