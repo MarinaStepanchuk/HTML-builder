@@ -1,42 +1,26 @@
 const fs = require('fs');
 const path = require('path');
+const fsPromises = require('fs/promises');
 
-const folder = path.join(__dirname, 'files');
-const folderNew = path.join(__dirname, 'files-copy');
+const folderCopy = path.join(__dirname, 'files');
+const folderNewCopy = path.join(__dirname, 'files-copy');
 
-fs.rm(folderNew, { recursive: true, force: true }, err => {
-    if(err) throw err;
-    fs.mkdir(folderNew, { recursive: true }, err => {
-        if(err) throw err;
-        fs.readdir(folder, { withFileTypes: true }, (err, files) => {
-            if(err) throw err;
-            files.forEach(file => {
-                if(file.isFile()) {
-                    fs.copyFile(path.join(folder,file.name), path.join(folderNew, file.name), err => {
-                        if(err) throw err;
-                    });
-                } else {
-                    copyDir(path.join(folder, file.name), path.join(folderNew, file.name));
-                };
-            });
-        });
-    });
-});
+copyFolder()
 
-function copyDir(dir, newDir) {
-    fs.mkdir(newDir, { recursive: true }, err => {
-        if(err) throw err;
-        fs.readdir(dir, { withFileTypes: true }, (err, files) => {
-            if(err) throw err;
-            files.forEach(file => {
-                if(file.isFile()) {
-                    fs.copyFile(path.join(dir, file.name), path.join(newDir, file.name), err => {
-                        if(err) throw err;
-                    });
-                } else {
-                    copyDir(path.join(dir, file.name), path.join(newDir, file.name));
-                };
-            });
-        });
+async function copyFolder() {
+    await fsPromises.rm(folderNewCopy, { force: true, recursive: true });
+    await fsPromises.mkdir(folderNewCopy, { recursive: true });
+    await copyDir(folderCopy, folderNewCopy);
+};
+
+async function copyDir(folder, folderNew) {
+    const files = await fsPromises.readdir(folder, { withFileTypes: true });
+    files.forEach(file => {
+        if(file.isFile()) {
+            fsPromises.copyFile(path.join(folder,file.name), path.join(folderNew, file.name));
+        } else {
+            fsPromises.mkdir(path.join(folderNew, file.name), { recursive: true }).then(
+            copyDir(path.join(folder, file.name), path.join(folderNew, file.name)));
+        };
     });
 };
